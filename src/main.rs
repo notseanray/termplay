@@ -3,27 +3,27 @@ use video::*;
 
 use std::env;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
         println!("no arguments found!
 example usage:
-    termplay video.mp4 4
+    termplay video.mp4 30
     termplay --play");
         std::process::exit(1);
     }
 
-    let mut framerate = 10;
-
-    if args.len() > 2 {
-        framerate = args[2].parse().expect("invalid framerate");
-    }
+    let framerate = match args.len() {
+        2.. => args[2].parse().expect("invalid framerate"),
+        _ => 10,
+    };
 
     if args[1] == "--play" {
-        print_frames(framerate);
+        print_frames(framerate)?;
         std::process::exit(0);
     }
 
-    split_frames(args[1].clone(), Some(framerate))
+    split_frames(args[1].clone(), framerate)?;
+    Ok(())
 }

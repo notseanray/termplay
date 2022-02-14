@@ -591,6 +591,7 @@ name = "termplay"
 version = "0.1.0"
 dependencies = [
  "image",
+ "rayon",
  "terminal_size",
 ]
 

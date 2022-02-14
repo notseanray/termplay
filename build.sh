@@ -1,2 +1,2 @@
 #!/bin/bash
-cargo build --release && doas cp target/release/termplay /usr/local/bin
+cargo build --release && sudo cp target/release/termplay /usr/local/bin

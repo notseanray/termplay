@@ -14,7 +14,7 @@ this video player is not very fast and requires heavy preprocessing, the frames 
 
 once all that processing is done the individial pixels are divided by a number to determine an index of possible pixel characters, they are appended to a string that is the size of the terminal and printed
 
-bad apple took over an hour to convert at 30 fps, in the future I'll be multithreading it and potentially swapping the processing it does to be less accurate but quicker
+The player is now semi-parallelized via rayon to help speed up the processing a bit
 
 #### installation
 
