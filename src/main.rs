@@ -7,15 +7,17 @@ fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        println!("no arguments found!
+        println!(
+            "no arguments found!
 example usage:
     termplay video.mp4 30
-    termplay --play");
+    termplay --play"
+        );
         std::process::exit(1);
     }
 
     let framerate = match args.len() {
-        2.. => args[2].parse().expect("invalid framerate"),
+        3.. => args[2].parse().expect("invalid framerate"),
         _ => 10,
     };
 
