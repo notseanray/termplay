@@ -1,8 +1,10 @@
 use image::imageops::{grayscale, resize};
 use image::open;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::cmp::Ordering;
 use std::fs;
 use std::io::Result;
+use std::path::PathBuf;
 use std::process::Command;
 use std::{thread, time};
 use terminal_size::{terminal_size, Height, Width};
@@ -14,7 +16,7 @@ pub fn split_frames(file: String, framerate: i32) -> std::io::Result<()> {
 
     let frames = format!("fps={framerate}");
     let ffmpeg = Command::new("ffmpeg")
-        .args(["-i", &file, "-vf", &frames, "/tmp/termplay.cache/%03d.jpg"])
+        .args(["-i", &file, "-vf", &frames, "/tmp/termplay.cache/%d.jpg"])
         .status()
         .expect("failed to run ffmpeg");
 
@@ -44,23 +46,44 @@ fn resize_frames() -> std::io::Result<()> {
             h as u32,
             image::imageops::FilterType::Nearest,
         );
-        img.save(i).expect("failed to resive frame");
+        img.save(i).expect("failed to resize frame");
         println!("resized: {:#?}", i);
     });
     Ok(())
 }
 
+#[allow(clippy::ptr_arg)]
+#[inline(always)]
+fn format(l: &PathBuf, r: &PathBuf) -> Ordering {
+    // janky but this takes only the number bit of the file name from ffmpeg
+    let left = l.to_string_lossy().split('.').collect::<Vec<_>>()[1]
+        .split('/')
+        .collect::<Vec<_>>()[1]
+        .parse::<usize>()
+        .unwrap_or(0);
+    let right = r.to_string_lossy().split('.').collect::<Vec<_>>()[1]
+        .split('/')
+        .collect::<Vec<_>>()[1]
+        .parse::<usize>()
+        .unwrap_or(0);
+    match left > right {
+        true => Ordering::Greater,
+        false => Ordering::Less,
+    }
+}
+
+#[inline(always)]
 pub fn print_frames(framerate: i32) -> std::io::Result<()> {
     let chars = vec!["#", "&", "@", "$", "%", "*", ".", " "];
     let mut frames = fs::read_dir("/tmp/termplay.cache")?
         .map(|res| res.map(|e| e.path()))
         .collect::<Result<Vec<_>>>()?;
-    frames.sort();
+    frames.sort_by(format);
     for i in frames {
         match open(i) {
             Ok(v) => {
-                let mut frame: String = "\x1B[H".to_string();
                 let img = v.into_bytes();
+                let mut frame: String = String::with_capacity(img.len());
                 for i in img {
                     frame.push_str(chars[(i / 36) as usize]);
                 }
